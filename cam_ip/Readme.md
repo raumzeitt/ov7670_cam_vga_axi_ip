@@ -24,11 +24,47 @@ see contraints file in top-level basys3.xdc
 ## Summary of design choices
 
 - Default resolution: QVGA 320×240 RGB565 (COM7 with QVGA+RGB) for Basys3 BRAM; VGA optional via param/reg
-
 - Host interface: AXI-Stream out now; AXI-Lite config when needed
-
-- Language: SystemVerilog, sync resets preferred for ASIC (rst_n)
-
-XCLK: Input to IP or pass-through; don’t hide an MMCM inside
-
+- Language: SystemVerilog, sync resets preferred for ASIC (`rst_n`)
+- XCLK: supplied by board/wrapper — not generated inside the IP
 - Verification: Cocotb camera model before any bitstream
+
+## RTL layout
+
+| File | Role |
+|------|------|
+| `rtl/ov7670_pkg.sv` | Shared params / ROM sentinels |
+| `rtl/ov7670_capture.sv` | pclk RGB565 capture + SOF/EOL |
+| `rtl/ov7670_sccb_master.sv` | Open-drain SCCB write master |
+| `rtl/ov7670_cfg_rom.sv` | QVGA RGB565 register program |
+| `rtl/ov7670_cfg_sequencer.sv` | Walks ROM, drives SCCB |
+| `rtl/axis_async_fifo.sv` | Shallow pclk→axis_aclk CDC FIFO |
+| `rtl/ov7670_cam_axis.sv` | IP top (AXIS master out) |
+
+## Run tests
+
+```bash
+cd cam_ip/tb
+./run_capture.sh      # Phase 1: pixel capture
+./run_sccb_cfg.sh     # Phase 2: SCCB config sequence
+./run_cam_axis.sh     # Phase 3: full IP → AXI-Stream
+```
+
+Requires `iverilog`/`vvp` on `PATH` (e.g. oss-cad-suite).
+
+**Do not run bare `make` inside an activated `.venv`** after sourcing oss-cad-suite —
+that mixes `PYTHONHOME` and breaks cocotb (`No module named 'pygpi'`). Use the
+`./run_*.sh` scripts instead; they pick the suite toolchain and unset a conflicting venv.
+
+`test_sccb_cfg` checks:
+- every ROM entry is written as SCCB `{0x42, reg, val}`
+- first write is soft-reset (`0x12,0x80`)
+- COM7 is QVGA+RGB (`0x12,0x14`)
+- `done` asserts after the program completes
+
+`test_cam_axis` checks (via **cocotbext-axi** `AxiStreamSink`):
+- config completes, then a frame streams out on AXI-Stream
+- `recv()` returns one line per `TLAST` (EOL)
+- `TUSER` = SOF on first pixel of the frame
+- pixel values match the BFM pattern
+- backpressure via `set_pause_generator` still delivers a full correct frame

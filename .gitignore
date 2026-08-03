@@ -1,1 +1,8 @@
+cam_ip/tb/.venv/
+cam_ip/tb/pydeps/
+cam_ip/tb/sim_build/
+cam_ip/tb/results.xml
+cam_ip/tb/__pycache__/
+*.vcd
+.DS_Store
 ref/
