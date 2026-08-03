@@ -3,6 +3,16 @@ cam_ip/tb/pydeps/
 cam_ip/tb/sim_build/
 cam_ip/tb/results.xml
 cam_ip/tb/__pycache__/
+vga_ip/tb/.venv/
+vga_ip/tb/pydeps/
+vga_ip/tb/sim_build/
+vga_ip/tb/results.xml
+vga_ip/tb/__pycache__/
+tb_end_to_end/.venv/
+tb_end_to_end/pydeps/
+tb_end_to_end/sim_build/
+tb_end_to_end/results.xml
+tb_end_to_end/__pycache__/
 *.vcd
 .DS_Store
 ref/
