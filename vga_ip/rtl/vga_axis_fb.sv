@@ -11,6 +11,9 @@
 module vga_axis_fb #(
   parameter int unsigned IMG_W      = 320,
   parameter int unsigned IMG_H      = 240,
+  parameter int unsigned N_BANKS    = 2,
+  parameter bit          INIT_DISPLAY_EN = 1'b0,
+  parameter bit          INIT_AXIS_EN    = 1'b0,
   parameter int unsigned RGB_BITS   = 4,
   parameter int unsigned H_VISIBLE  = 640,
   parameter int unsigned H_FP       = 16,
@@ -141,8 +144,10 @@ module vga_axis_fb #(
   // AXI-Lite registers
   // -------------------------------------------------------------------------
   vga_axil_regs #(
-    .IMG_W(IMG_W),
-    .IMG_H(IMG_H)
+    .IMG_W            (IMG_W),
+    .IMG_H            (IMG_H),
+    .INIT_DISPLAY_EN  (INIT_DISPLAY_EN),
+    .INIT_AXIS_EN     (INIT_AXIS_EN)
   ) u_regs (
     .clk                 (axi_aclk),
     .rst_n               (rst_n),
@@ -284,7 +289,7 @@ module vga_axis_fb #(
     .IMG_W  (IMG_W),
     .IMG_H  (IMG_H),
     .PIX_W  (16),
-    .N_BANKS(2)
+    .N_BANKS(N_BANKS)
   ) u_fb (
     .wr_clk  (axi_aclk),
     .wr_en   (fb_wr_en),

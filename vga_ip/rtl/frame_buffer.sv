@@ -9,30 +9,33 @@ module frame_buffer #(
   // Write port (axi clock domain)
   input  logic                              wr_clk,
   input  logic                              wr_en,
-  input  logic [$clog2(N_BANKS)-1:0]        wr_bank,
+  input  logic [((N_BANKS > 1) ? $clog2(N_BANKS) : 1)-1:0] wr_bank,
   input  logic [$clog2(IMG_W*IMG_H)-1:0]    wr_addr,
   input  logic [PIX_W-1:0]                  wr_data,
 
   // Read port (vga clock domain), 1-cycle latency
   input  logic                              rd_clk,
   input  logic                              rd_en,
-  input  logic [$clog2(N_BANKS)-1:0]        rd_bank,
+  input  logic [((N_BANKS > 1) ? $clog2(N_BANKS) : 1)-1:0] rd_bank,
   input  logic [$clog2(IMG_W*IMG_H)-1:0]    rd_addr,
   output logic [PIX_W-1:0]                  rd_data
 );
 
   localparam int unsigned DEPTH      = IMG_W * IMG_H;
   localparam int unsigned PIX_ADDR_W = $clog2(DEPTH);
-  localparam int unsigned BANK_W     = $clog2(N_BANKS);
   localparam int unsigned MEM_DEPTH  = N_BANKS * DEPTH;
   localparam int unsigned MEM_ADDR_W = $clog2(MEM_DEPTH);
 
-  // Linear address: bank * DEPTH + pixel (safe for non-power-of-two frames)
+  // Linear address: bank * DEPTH + pixel (N_BANKS=1 → pixel index only)
   logic [MEM_ADDR_W-1:0] wr_mem_addr;
   logic [MEM_ADDR_W-1:0] rd_mem_addr;
 
-  assign wr_mem_addr = MEM_ADDR_W'(wr_bank * DEPTH + wr_addr);
-  assign rd_mem_addr = MEM_ADDR_W'(rd_bank * DEPTH + rd_addr);
+  assign wr_mem_addr = (N_BANKS > 1)
+                       ? MEM_ADDR_W'(wr_bank * DEPTH + wr_addr)
+                       : MEM_ADDR_W'(wr_addr);
+  assign rd_mem_addr = (N_BANKS > 1)
+                       ? MEM_ADDR_W'(rd_bank * DEPTH + rd_addr)
+                       : MEM_ADDR_W'(rd_addr);
 
   dp_ram #(
     .WIDTH (PIX_W),

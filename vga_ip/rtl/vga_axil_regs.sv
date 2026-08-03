@@ -2,7 +2,10 @@
 // Sync rst_n. No FPGA interconnect IP — plain Lite slave FSM.
 module vga_axil_regs #(
   parameter int unsigned IMG_W = 320,
-  parameter int unsigned IMG_H = 240
+  parameter int unsigned IMG_H = 240,
+  // Standalone FPGA bring-up: enable display/axis without an AXI-Lite master
+  parameter bit          INIT_DISPLAY_EN = 1'b0,
+  parameter bit          INIT_AXIS_EN    = 1'b0
 ) (
   input  logic        clk,
   input  logic        rst_n,
@@ -94,8 +97,8 @@ module vga_axil_regs #(
       wdata_q        <= '0;
       wstrb_q        <= '0;
       s_axil_bvalid  <= 1'b0;
-      display_en_q   <= 1'b0;
-      axis_en_q      <= 1'b0;
+      display_en_q   <= INIT_DISPLAY_EN;
+      axis_en_q      <= INIT_AXIS_EN;
       fb_addr_q      <= '0;
       swap_req_q     <= 1'b0;
       status_clear_q <= 1'b0;

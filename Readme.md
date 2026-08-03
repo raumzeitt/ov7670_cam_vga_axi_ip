@@ -58,12 +58,33 @@ See [`vga_ip/Readme.md`](vga_ip/Readme.md) for the register map.
 
 ## Hardware status
 
-Simulation of both IPs and the end-to-end path is done. Still needed for Basys3:
+Simulation of both IPs and the end-to-end path is done. Basys3 integration:
 
-1. Board top: clocks (100 MHz → ~25 MHz `vga_clk` / `xclk`), wire cam→VGA, match XDC names
-2. **BRAM fit** — 2×QVGA RGB565 ≈ 2.46 Mbit; XC7A35T has ~1.8 Mbit → use **one bank**
-   (or a smaller frame) for first bring-up
-3. Vivado project under `vivado/`, program, bring-up with status LEDs
+| Item | Status |
+|------|--------|
+| Board top (`vivado/fpga/basys3_top.sv`) | Cam → AXIS → VGA, 25 MHz clocks from 100 MHz |
+| Bring-up FSM (`basys3_ctrl.sv`) | SCCB config then `stream_enable` |
+| Constraints | `constraints/basys3.xdc` (Pmod JB/JC + VGA) |
+| Vivado project | `vivado/viv_ov7670_basys3/` |
+| BRAM | **Single bank** QVGA (`N_BANKS=1`) — fits XC7A35T; tearing possible |
+
+### Build and program
+
+```bash
+cd vivado/viv_ov7670_basys3
+vivado viv_ov7670_basys3.xpr
+# Run Synthesis → Implementation → Generate Bitstream
+```
+
+### Bring-up
+
+1. Connect OV7670 to Pmods **JB** + **JC** (see `constraints/basys3.xdc`).
+2. VGA monitor on the board connector.
+3. **SW0 up** (V16) to run; down holds reset.
+4. **LEDs:** `[0]` reset ok, `[1]` SCCB done, `[2]` streaming, `[3]` running, `[4]` config timeout.
+5. **JA (`dbg_gpio`):** cfg_done, stream_enable, axis valid/ready.
+
+First image may take ~1 s (SCCB program). Single-bank FB may show tearing during live capture.
 
 ## References
 
