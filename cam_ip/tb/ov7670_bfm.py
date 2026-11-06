@@ -60,7 +60,7 @@ class Ov7670Bfm:
                 await RisingEdge(self.pclk)
 
     async def start_clock(self):
-        cocotb.start_soon(Clock(self.pclk, self.pclk_period_ns, unit="ns").start())
+        cocotb.start_soon(Clock(self.pclk, self.pclk_period_ns, units="ns").start())
 
     async def idle(self, cycles: int = 4):
         self.vsync.value = 0
